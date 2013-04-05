@@ -1,9 +1,29 @@
 ﻿#Wait for load the page
 function WaitForLoad ($ie)
 {
-	do {sleep -Seconds 5}
+	do {sleep -Seconds 1}
 	while ($ie.Busy)
 }
+function HtmlAnalysis($ie,$ProduktUrl){
+	$ie.Navigate($ProduktUrl)
+	WaitForLoad $ie
+	$resultsDiv = $ie.Document.getElementsByTagName("div")
+	foreach($usr_div in $resultsDiv){
+		if ($usr_div.className -eq "jspPane"){
+			$UsrTableDivs = $usr_div.getElementsByTagName("div")
+			foreach($UsRTableDiv in $UsrTableDivs){
+				if ($UsRTableDiv.className -eq "td cel1"){
+					Write-Host $UsRTableDiv.className $UsRTableDiv.innerText
+				}elseif($UsRTableDiv.className -eq "td cel2"){
+					Write-Host $UsRTableDiv.className ' - ' $UsRTableDiv.Title
+				}else{
+					Write-Host $UsRTableDiv.className
+				}
+			}
+		}
+	}
+}
+
 cls
 # Loginname
 # $username_or_email = “mja@warensortiment.de”;
@@ -22,12 +42,12 @@ $username_or_email = [char[]]$rsa.Decrypt($encrypted.MeinPaket.BN, $true) -join 
 # CSV -> https://www.meinpaket.de/de/dealer/page/myaccount/productmanagement/showProductDownloadDlg.html
 # DownloadDlgf schließen -> https://www.meinpaket.de/de/menu/dealer/myaccount/productmanagement/productsoverview
 $url = “https://www.meinpaket.de/de/menu/dealer/home”;
-$ProduktUrl = "https://www.meinpaket.de/de/menu/";
+$ProduktUrl = "https://www.meinpaket.de/de/menu/dealer/myaccount/productmanagement";
 
 
 # Create an ie com object
 $ie = New-Object -com internetexplorer.application;
-$ie.visible = $true;
+#$ie.visible = $true;
 $ie.navigate($url);
 # Wait for the page to load
 WaitForLoad ($ie)
@@ -42,15 +62,17 @@ $go = $ie.Document.getElementsByTagName("button") | Where-Object {$_.ClassName -
 $go.Click();
 # Wait for the page to load
 WaitForLoad ($ie)
-
+HtmlAnalysis $ie $ProduktUrl
+<#
 $ie.Navigate("https://www.meinpaket.de/de/dealer/page/myaccount/productmanagement/showProductDownloadDlg.html");
 WaitForLoad ($ie)
+
 $rdb_product_csv = $ie.Document.getElementById("basPrd")
 $rdb_product_csv.setActive()
 $rdb_product_csv.click()
 $go = $ie.Document.getElementsByTagName("button") | Where-Object {$_.ClassName -eq "lnkBtnLrg"};
 $go.Click();
 WaitForLoad ($ie)
-
+#>
 $ie.Navigate("https://www.meinpaket.de/de/j_spring_security_logout");
 $ie.Quit();
